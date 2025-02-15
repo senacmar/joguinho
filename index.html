@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Space Dodge Game</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="bdbe6652ac1fa6d248bfb601c5d92f31.jpg" />
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      class Player {
+        constructor() {
+          this.x = canvas.width / 2;
+          this.y = canvas.height - 50;
+          this.width = 40;
+          this.height = 40;
+          this.speed = 10;
+          this.movingLeft = false;
+          this.movingRight = false;
+        }
+        draw() {
+          ctx.fillStyle = "white";
+          ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+        move() {
+          if (this.movingLeft) {
+            this.x -= this.speed;
+            if (this.x < -this.width) this.x = canvas.width;
+          }
+          if (this.movingRight) {
+            this.x += this.speed;
+            if (this.x > canvas.width) this.x = -this.width;
+          }
+        }
+      }
+
+      class Asteroid {
+        constructor(speedMultiplier) {
+          this.x = Math.random() * canvas.width;
+          this.y = -50;
+          this.size = Math.random() * 30 + 20;
+          this.speed = (Math.random() * 5 + 5) * speedMultiplier;
+        }
+        draw() {
+          ctx.fillStyle = "red";
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        update() {
+          this.y += this.speed;
+        }
+      }
+
+      const player = new Player();
+      const asteroids = [];
+      let gameOver = false;
+      let speedMultiplier = 1;
+      let frameCount = 0;
+
+      function updateGame() {
+        frameCount++;
+        if (frameCount % 300 === 0) speedMultiplier += 0.3;
+
+        if (Math.random() < 0.05) {
+          asteroids.push(new Asteroid(speedMultiplier));
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        player.move();
+        player.draw();
+        asteroids.forEach((asteroid, index) => {
+          asteroid.update();
+          asteroid.draw();
+          if (asteroid.y > canvas.height) {
+            asteroids.splice(index, 1);
+          }
+          if (
+            asteroid.x < player.x + player.width &&
+            asteroid.x + asteroid.size > player.x &&
+            asteroid.y < player.y + player.height &&
+            asteroid.y + asteroid.size > player.y
+          ) {
+            gameOver = true;
+          }
+        });
+        if (!gameOver) {
+          requestAnimationFrame(updateGame);
+        } else {
+          ctx.fillStyle = "white";
+          ctx.font = "40px Arial";
+          ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+        }
+      }
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowLeft") player.movingLeft = true;
+        if (event.key === "ArrowRight") player.movingRight = true;
+      });
+
+      document.addEventListener("keyup", (event) => {
+        if (event.key === "ArrowLeft") player.movingLeft = false;
+        if (event.key === "ArrowRight") player.movingRight = false;
+      });
+
+      updateGame();
+    </script>
+  </body>
+</html>
